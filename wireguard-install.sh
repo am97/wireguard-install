@@ -223,6 +223,7 @@ net.ipv6.conf.all.forwarding = 1" >/etc/sysctl.d/wg.conf
 
 function newClient() {
 	ENDPOINT="${SERVER_PUB_IP}:${SERVER_PORT}"
+	BASE_IP=$(echo "$SERVER_WG_IPV4" | awk -F '.' '{ print $1"."$2"."$3 }')
 
 	echo ""
 	echo "Tell me a name for the client."
@@ -240,7 +241,7 @@ function newClient() {
 	done
 
 	for DOT_IP in {2..254}; do
-		DOT_EXISTS=$(grep -c "${SERVER_WG_IPV4::-1}${DOT_IP}" "/etc/wireguard/${SERVER_WG_NIC}.conf")
+		DOT_EXISTS=$(grep -c "${BASE_IP}.${DOT_IP}" "/etc/wireguard/${SERVER_WG_NIC}.conf")
 		if [[ ${DOT_EXISTS} == '0' ]]; then
 			break
 		fi
@@ -252,7 +253,6 @@ function newClient() {
 		exit 1
 	fi
 
-	BASE_IP=$(echo "$SERVER_WG_IPV4" | awk -F '.' '{ print $1"."$2"."$3 }')
 	until [[ ${IPV4_EXISTS} == '0' ]]; do
 		read -rp "Client's WireGuard IPv4: ${BASE_IP}." -e -i "${DOT_IP}" DOT_IP
 		CLIENT_WG_IPV4="${BASE_IP}.${DOT_IP}"
